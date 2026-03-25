@@ -6,7 +6,7 @@ import GlassButton from '../../components/GlassButton';
 import ResultCard from './ResultCard';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import api from '../../utils/api';
+import axios from 'axios';
 
 const Dashboard = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -65,7 +65,7 @@ const Dashboard = () => {
     }
 
     setUploading(true);
-    console.log('Starting upload to backend: /api/predict');
+    console.log(`Starting upload to backend: ${import.meta.env.VITE_API_BASE_URL}/api/predict`);
     
     const formData = new FormData();
     formData.append('image', selectedFile);
@@ -78,7 +78,7 @@ const Dashboard = () => {
         },
       };
       
-      const response = await api.post('/api/predict', formData, config);
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/predict`, formData, config);
       console.log('Prediction received successfully:', response.data);
       setResult(response.data);
       addToast('Analysis complete!', 'success');

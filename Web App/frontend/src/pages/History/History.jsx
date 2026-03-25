@@ -4,7 +4,7 @@ import { Search, Filter, Calendar, ChevronRight, FileText, Download, Trash2, Loa
 import GlassCard from '../../components/GlassCard';
 import GlassButton from '../../components/GlassButton';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../utils/api';
+import axios from 'axios';
 
 const History = () => {
   const [history, setHistory] = useState([]);
@@ -21,8 +21,8 @@ const History = () => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-        const { data } = await api.get('/api/history', config);
-        setHistory(data);
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/history`, config);
+        setHistory(response.data);
       } catch (err) {
         console.error('Failed to fetch history:', err);
       } finally {
@@ -101,7 +101,7 @@ const History = () => {
                   {/* Image Preview */}
                   <div className="h-48 relative overflow-hidden">
                     <img 
-                      src={`http://localhost:5000${item.imageUrl}`} 
+                      src={`${import.meta.env.VITE_API_BASE_URL}${item.imageUrl}`} 
                       alt={item.disease} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                     />
