@@ -20,7 +20,9 @@ import numpy as np
 import pennylane as qml
 import numpy as np
 import pennylane as qml
-# From local imports below
+import torch
+import torch.nn as nn
+# Heavy library (torchvision) still moved inside __init__
 from utils.config import CFG
 
 
@@ -60,7 +62,6 @@ class HybridQuantumClassifier(nn.Module):
     """
 
     def __init__(self):
-        import torch.nn as nn
         import torchvision.models as models
         super().__init__()
 
