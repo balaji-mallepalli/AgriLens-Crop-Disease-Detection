@@ -30,7 +30,7 @@ app.add_middleware(
 # Global model instance
 model = None
 
-# Overriding classes for the Top-10 high-accuracy model
+# Overriding classes for the 22-class high-accuracy model
 INFERENCE_CLASSES = [
     "apple_apple_scab", "apple_black_rot", "apple_cedar_apple_rust", "apple_healthy",
     "grape_black_rot", "grape_esca_black_measles", "grape_healthy", "grape_leaf_blight_isariopsis_leaf_spot",
@@ -40,15 +40,20 @@ INFERENCE_CLASSES = [
     "corn_maize_common_rust", "corn_maize_healthy", "corn_maize_northern_leaf_blight"
 ]
 
-@app.on_event("startup")
-async def load_model():
+def get_model():
+    """Lazy loader for the Hybrid model to prevent Render timeouts."""
     global model
+    if model is not None:
+        return model
+
     model_path = CFG.MODELS_DIR / "hybrid_vqc_best.pt"
     if not model_path.exists():
         print(f"ERROR: Model not found at {model_path}")
-        return
+        return None
 
-    # Force 10 classes for the high-accuracy checkpoint
+    print(f"INFO: Loading Hybrid Model (22 Classes) from {model_path}...")
+    
+    # Configure classes
     from models.vqc import HybridQuantumClassifier
     CFG.CLASSES = INFERENCE_CLASSES 
     CFG.NUM_CLASSES = len(INFERENCE_CLASSES)
@@ -57,7 +62,8 @@ async def load_model():
     model.load_state_dict(torch.load(model_path, map_location=CFG.DEVICE))
     model.eval()
     model.to(CFG.DEVICE)
-    print(f"INFO: Hybrid Model (92.1% Accuracy) loaded on {CFG.DEVICE} with {len(INFERENCE_CLASSES)} classes")
+    print(f"INFO: Hybrid Model loaded successfully on {CFG.DEVICE}")
+    return model
 
 TREATMENTS = {
     "tomato_tomato_yellowleaf_curl_virus": {
@@ -156,8 +162,9 @@ async def health():
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
+    model = get_model()
     if model is None:
-        raise HTTPException(status_code=503, detail="Model not loaded")
+        raise HTTPException(status_code=503, detail="Model file not found on server")
 
     try:
         # Save upload to temp file

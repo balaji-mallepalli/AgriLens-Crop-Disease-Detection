@@ -24,9 +24,7 @@ import torchvision.models as models
 from utils.config import CFG
 
 
-# ── 1. Build the PennyLane device ────────────────────────────────────────────
-dev = qml.device(CFG.QUANTUM_DEVICE, wires=CFG.N_QUBITS, shots=CFG.SHOTS)
-
+# ── 1. Model Scaling Configuration ───────────────────────────────────────────
 N_VQC_LAYERS = 6  # deeper circuit for better expressivity
 
 
@@ -64,6 +62,9 @@ class HybridQuantumClassifier(nn.Module):
     def __init__(self):
         super().__init__()
 
+        # Initialize PennyLane device here to avoid import-time delays
+        self.dev = qml.device(CFG.QUANTUM_DEVICE, wires=CFG.N_QUBITS, shots=CFG.SHOTS)
+
         # CNN Backbone (frozen)
         backbone = models.resnet18(pretrained=CFG.CNN_PRETRAINED)
         self.cnn_backbone = nn.Sequential(*list(backbone.children())[:-1])
@@ -85,7 +86,8 @@ class HybridQuantumClassifier(nn.Module):
         # Quantum Layer using PennyLane TorchLayer
         weight_shapes = {"weights": (CFG.N_LAYERS, CFG.N_QUBITS, 3)}
         
-        @qml.qnode(dev, interface="torch")
+        # Define QNode inside constructor bound to self.dev
+        @qml.qnode(self.dev, interface="torch")
         def qnode(inputs, weights):
             return quantum_circuit_func(inputs, weights)
             
