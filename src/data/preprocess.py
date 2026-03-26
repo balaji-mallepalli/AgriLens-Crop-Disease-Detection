@@ -10,9 +10,7 @@ Also provides a single-image inference function for the Streamlit dashboard.
 """
 
 import numpy as np
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
+# Heavy imports (torch, torchvision, Dataset) moved inside functions/classes
 from PIL import Image
 from pathlib import Path
 from typing import List, Tuple, Union
@@ -31,6 +29,7 @@ def get_train_transforms() -> transforms.Compose:
       - Color jitter (brightness/contrast)
       - Normalize to ImageNet mean/std (for pre-trained ResNet)
     """
+    from torchvision import transforms
     aug_list = [
         transforms.Resize((256, 256)),       # resize slightly larger
     ]
@@ -66,6 +65,7 @@ def get_train_transforms() -> transforms.Compose:
 
 def get_eval_transforms() -> transforms.Compose:
     """Validation/test transforms — no augmentation, just resize + normalize."""
+    from torchvision import transforms
     return transforms.Compose([
         transforms.Resize(CFG.IMG_SIZE),
         transforms.ToTensor(),
@@ -166,6 +166,7 @@ def preprocess_single_image(img_path: Union[Path, str]) -> torch.Tensor:
     Returns:
         Tensor of shape (1, 3, 224, 224) — ready for model input
     """
+    import torch
     image = Image.open(str(img_path)).convert("RGB")
     transform = get_eval_transforms()
     tensor = transform(image).unsqueeze(0)   # add batch dimension
