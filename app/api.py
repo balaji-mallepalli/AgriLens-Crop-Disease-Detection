@@ -40,24 +40,37 @@ INFERENCE_CLASSES = [
     "corn_maize_common_rust", "corn_maize_healthy", "corn_maize_northern_leaf_blight"
 ]
 
-@app.on_event("startup")
-async def load_model():
+def get_model():
     global model
+    if model is not None:
+        return model
+        
     model_path = CFG.MODELS_DIR / "hybrid_vqc_best.pt"
     if not model_path.exists():
         print(f"ERROR: Model not found at {model_path}")
-        return
+        return None
 
     # Force 10 classes for the high-accuracy checkpoint
-    from models.vqc import HybridQuantumClassifier
     CFG.CLASSES = INFERENCE_CLASSES 
     CFG.NUM_CLASSES = len(INFERENCE_CLASSES)
     
+    from models.vqc import HybridQuantumClassifier
     model = HybridQuantumClassifier()
     model.load_state_dict(torch.load(model_path, map_location=CFG.DEVICE))
     model.eval()
     model.to(CFG.DEVICE)
-    print(f"INFO: Hybrid Model (92.1% Accuracy) loaded on {CFG.DEVICE} with {len(INFERENCE_CLASSES)} classes")
+    print(f"INFO: Hybrid Model (92.1% Accuracy) loaded on {CFG.DEVICE}")
+    return model
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to AgriLens Hybrid AI Engine",
+        "version": "2.1.0",
+        "classes_supported": len(INFERENCE_CLASSES),
+        "status": "online",
+        "health_check": "/health"
+    }
 
 TREATMENTS = {
     "tomato_tomato_yellowleaf_curl_virus": {
@@ -162,12 +175,14 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "model_loaded": model is not None, "device": str(CFG.DEVICE)}
+    current_model = get_model()
+    return {"status": "ok", "model_loaded": current_model is not None, "device": str(CFG.DEVICE)}
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    if model is None:
-        raise HTTPException(status_code=503, detail="Model not loaded")
+    current_model = get_model()
+    if current_model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded or found")
 
     try:
         # Save upload to temp file
@@ -178,7 +193,7 @@ async def predict(file: UploadFile = File(...)):
 
         # Run inference
         x_tensor = preprocess_single_image(tmp_path).to(CFG.DEVICE)
-        probs = model.predict_proba(x_tensor).squeeze().cpu().detach().numpy()
+        probs = current_model.predict_proba(x_tensor).squeeze().cpu().detach().numpy()
         pred_idx = int(np.argmax(probs))
         pred_cls_raw = CFG.CLASSES[pred_idx]
         confidence = float(probs[pred_idx])
