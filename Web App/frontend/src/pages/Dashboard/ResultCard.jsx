@@ -23,7 +23,7 @@ const ResultCard = ({ result }) => {
           {/* Image Preview */}
           <div className="w-full md:w-48 h-48 rounded-2xl overflow-hidden border-2 border-white/20 dark:border-white/10 shadow-inner">
             <img 
-              src={`${import.meta.env.VITE_API_BASE_URL}${result.imageUrl}`} 
+              src={`http://localhost:5000${result.imageUrl}`} 
               alt="Scan Preview" 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />

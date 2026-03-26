@@ -1,3 +1,10 @@
+"""
+config.py — Central configuration for QuantumCrop.
+
+All hyperparameters, paths, and settings live here.
+Import this in any module:  from utils.config import CFG
+"""
+
 from pathlib import Path
 import torch
 

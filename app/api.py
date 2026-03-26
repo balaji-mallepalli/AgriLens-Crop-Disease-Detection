@@ -1,16 +1,9 @@
 import sys
 import os
-
-# 🚀 Render Deployment Optimization: Suppress Matplotlib font cache building
-# This must happen before any other imports that might trigger matplotlib
-os.environ['MPLBACKEND'] = 'Agg'
-os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
-
 from pathlib import Path
 import tempfile
-from pathlib import Path
-import tempfile
-# Heavy imports (torch, numpy) moved inside functions
+import torch
+import numpy as np
 from PIL import Image
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +12,9 @@ import uvicorn
 # Make src/ importable from project root
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-# Project-specific imports moved inside functions to prevent startup delays
+from utils.config import CFG
+from data.preprocess import preprocess_single_image
+from models.vqc import HybridQuantumClassifier
 
 app = FastAPI(title="QuantumCrop Hybrid API", version="2.1.0")
 
@@ -35,7 +30,7 @@ app.add_middleware(
 # Global model instance
 model = None
 
-# Overriding classes for the 22-class high-accuracy model
+# Overriding classes for the Top-10 high-accuracy model
 INFERENCE_CLASSES = [
     "apple_apple_scab", "apple_black_rot", "apple_cedar_apple_rust", "apple_healthy",
     "grape_black_rot", "grape_esca_black_measles", "grape_healthy", "grape_leaf_blight_isariopsis_leaf_spot",
@@ -45,32 +40,24 @@ INFERENCE_CLASSES = [
     "corn_maize_common_rust", "corn_maize_healthy", "corn_maize_northern_leaf_blight"
 ]
 
-def get_model():
-    """Lazy loader for the Hybrid model to prevent Render timeouts."""
+@app.on_event("startup")
+async def load_model():
     global model
-    if model is not None:
-        return model
-
-    from utils.config import CFG
     model_path = CFG.MODELS_DIR / "hybrid_vqc_best.pt"
     if not model_path.exists():
         print(f"ERROR: Model not found at {model_path}")
-        return None
+        return
 
-    print(f"INFO: Loading Hybrid Model (22 Classes) from {model_path}...")
-    
-    # Configure classes
+    # Force 10 classes for the high-accuracy checkpoint
     from models.vqc import HybridQuantumClassifier
     CFG.CLASSES = INFERENCE_CLASSES 
     CFG.NUM_CLASSES = len(INFERENCE_CLASSES)
     
-    import torch
     model = HybridQuantumClassifier()
     model.load_state_dict(torch.load(model_path, map_location=CFG.DEVICE))
     model.eval()
     model.to(CFG.DEVICE)
-    print(f"INFO: Hybrid Model loaded successfully on {CFG.DEVICE}")
-    return model
+    print(f"INFO: Hybrid Model (92.1% Accuracy) loaded on {CFG.DEVICE} with {len(INFERENCE_CLASSES)} classes")
 
 TREATMENTS = {
     "tomato_tomato_yellowleaf_curl_virus": {
@@ -165,14 +152,12 @@ TREATMENTS = {
 
 @app.get("/health")
 async def health():
-    from utils.config import CFG
     return {"status": "ok", "model_loaded": model is not None, "device": str(CFG.DEVICE)}
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    model = get_model()
     if model is None:
-        raise HTTPException(status_code=503, detail="Model file not found on server")
+        raise HTTPException(status_code=503, detail="Model not loaded")
 
     try:
         # Save upload to temp file
@@ -182,10 +167,6 @@ async def predict(file: UploadFile = File(...)):
             tmp_path = Path(tmp.name)
 
         # Run inference
-        import torch
-        import numpy as np
-        from data.preprocess import preprocess_single_image
-        from utils.config import CFG
         x_tensor = preprocess_single_image(tmp_path).to(CFG.DEVICE)
         probs = model.predict_proba(x_tensor).squeeze().cpu().detach().numpy()
         pred_idx = int(np.argmax(probs))

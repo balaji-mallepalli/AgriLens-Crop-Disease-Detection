@@ -45,3 +45,4 @@ secrets.yaml
 node_modules/
 Web App/frontend/node_modules/
 Web App/backend/node_modules/
+Web App/backend/uploads/

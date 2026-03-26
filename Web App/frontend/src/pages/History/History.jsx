@@ -21,7 +21,7 @@ const History = () => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/history`, config);
+        const response = await axios.get('http://localhost:5000/api/history', config);
         setHistory(response.data);
       } catch (err) {
         console.error('Failed to fetch history:', err);
@@ -101,7 +101,7 @@ const History = () => {
                   {/* Image Preview */}
                   <div className="h-48 relative overflow-hidden">
                     <img 
-                      src={`${import.meta.env.VITE_API_BASE_URL}${item.imageUrl}`} 
+                      src={`http://localhost:5000${item.imageUrl}`} 
                       alt={item.disease} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                     />

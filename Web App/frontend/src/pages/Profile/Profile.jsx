@@ -33,7 +33,7 @@ const Profile = () => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-        const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/stats`, config);
+        const { data } = await axios.get('http://localhost:5000/api/user/stats', config);
         setUserStats(data);
       } catch (error) {
         console.error('Failed to fetch stats:', error);
@@ -53,7 +53,7 @@ const Profile = () => {
           Authorization: `Bearer ${user.token}`,
         },
       };
-      const { data } = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/user/profile`, {
+      const { data } = await axios.put('http://localhost:5000/api/user/profile', {
         name: formData.name,
         bio: formData.bio,
         location: formData.location

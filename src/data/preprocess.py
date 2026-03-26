@@ -31,7 +31,6 @@ def get_train_transforms() -> transforms.Compose:
       - Color jitter (brightness/contrast)
       - Normalize to ImageNet mean/std (for pre-trained ResNet)
     """
-    from torchvision import transforms
     aug_list = [
         transforms.Resize((256, 256)),       # resize slightly larger
     ]
@@ -67,7 +66,6 @@ def get_train_transforms() -> transforms.Compose:
 
 def get_eval_transforms() -> transforms.Compose:
     """Validation/test transforms — no augmentation, just resize + normalize."""
-    from torchvision import transforms
     return transforms.Compose([
         transforms.Resize(CFG.IMG_SIZE),
         transforms.ToTensor(),

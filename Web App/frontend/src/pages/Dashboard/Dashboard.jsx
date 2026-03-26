@@ -65,7 +65,7 @@ const Dashboard = () => {
     }
 
     setUploading(true);
-    console.log(`Starting upload to backend: ${import.meta.env.VITE_API_BASE_URL}/api/predict`);
+    console.log('Starting upload to backend: http://localhost:5000/api/predict');
     
     const formData = new FormData();
     formData.append('image', selectedFile);
@@ -78,7 +78,7 @@ const Dashboard = () => {
         },
       };
       
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/predict`, formData, config);
+      const response = await axios.post('http://localhost:5000/api/predict', formData, config);
       console.log('Prediction received successfully:', response.data);
       setResult(response.data);
       addToast('Analysis complete!', 'success');

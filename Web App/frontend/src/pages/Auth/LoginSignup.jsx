@@ -35,7 +35,7 @@ const LoginSignup = () => {
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}${endpoint}`, formData);
+      const response = await axios.post(`http://localhost:5000${endpoint}`, formData);
       
       login(response.data);
       addToast(isLogin ? 'Successfully logged in!' : 'Account created successfully!', 'success');
