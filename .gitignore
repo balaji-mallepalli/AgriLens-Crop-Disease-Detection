@@ -25,6 +25,7 @@ data/processed/*.npy
 
 # Outputs (models, plots) — commit benchmark reports only
 outputs/models/
+!outputs/models/hybrid_vqc_best.pt
 outputs/plots/
 
 # IDE

@@ -150,6 +150,16 @@ TREATMENTS = {
     }
 }
 
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to AgriLens Hybrid AI Engine",
+        "version": "2.1.0",
+        "classes_supported": len(INFERENCE_CLASSES),
+        "status": "online",
+        "health_check": "/health"
+    }
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "model_loaded": model is not None, "device": str(CFG.DEVICE)}
