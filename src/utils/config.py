@@ -1,12 +1,5 @@
-"""
-config.py — Central configuration for QuantumCrop.
-
-All hyperparameters, paths, and settings live here.
-Import this in any module:  from utils.config import CFG
-"""
-
 from pathlib import Path
-# Heavy import (torch) removed to speed up project-wide imports
+import torch
 
 # ── Project root (always resolves correctly regardless of where script is run) ─
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,8 +14,7 @@ class CFG:
     PLOTS_DIR       = ROOT / "outputs" / "plots"
 
     # ── Device ────────────────────────────────────────────────────────────────
-    # We use a string here; the model will convert to torch.device internally
-    DEVICE          = "cpu" # Default to CPU for startup stability
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # ── Dataset ───────────────────────────────────────────────────────────────
     # Set to a list of strings to only load those folders. 

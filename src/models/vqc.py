@@ -18,11 +18,9 @@ Key upgrades over basic VQC:
 
 import numpy as np
 import pennylane as qml
-import numpy as np
-import pennylane as qml
 import torch
 import torch.nn as nn
-# Heavy library (torchvision) still moved inside __init__
+import torchvision.models as models
 from utils.config import CFG
 
 

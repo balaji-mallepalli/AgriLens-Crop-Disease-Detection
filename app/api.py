@@ -19,9 +19,7 @@ import uvicorn
 # Make src/ importable from project root
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from utils.config import CFG
-from data.preprocess import preprocess_single_image
-from models.vqc import HybridQuantumClassifier
+# Project-specific imports moved inside functions to prevent startup delays
 
 app = FastAPI(title="QuantumCrop Hybrid API", version="2.1.0")
 
@@ -53,6 +51,7 @@ def get_model():
     if model is not None:
         return model
 
+    from utils.config import CFG
     model_path = CFG.MODELS_DIR / "hybrid_vqc_best.pt"
     if not model_path.exists():
         print(f"ERROR: Model not found at {model_path}")
@@ -166,6 +165,7 @@ TREATMENTS = {
 
 @app.get("/health")
 async def health():
+    from utils.config import CFG
     return {"status": "ok", "model_loaded": model is not None, "device": str(CFG.DEVICE)}
 
 @app.post("/predict")
@@ -184,6 +184,8 @@ async def predict(file: UploadFile = File(...)):
         # Run inference
         import torch
         import numpy as np
+        from data.preprocess import preprocess_single_image
+        from utils.config import CFG
         x_tensor = preprocess_single_image(tmp_path).to(CFG.DEVICE)
         probs = model.predict_proba(x_tensor).squeeze().cpu().detach().numpy()
         pred_idx = int(np.argmax(probs))

@@ -10,7 +10,9 @@ Also provides a single-image inference function for the Streamlit dashboard.
 """
 
 import numpy as np
-# Heavy imports (torch, torchvision, Dataset) moved inside functions/classes
+import torch
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
 from PIL import Image
 from pathlib import Path
 from typing import List, Tuple, Union
@@ -166,7 +168,6 @@ def preprocess_single_image(img_path: Union[Path, str]) -> torch.Tensor:
     Returns:
         Tensor of shape (1, 3, 224, 224) — ready for model input
     """
-    import torch
     image = Image.open(str(img_path)).convert("RGB")
     transform = get_eval_transforms()
     tensor = transform(image).unsqueeze(0)   # add batch dimension
